@@ -1,5 +1,6 @@
 ﻿using AirplaneSimulation.Models;
 using System;
+using System.Threading;
 
 namespace AirplaneSimulation
 {
@@ -8,6 +9,7 @@ namespace AirplaneSimulation
         static void Main(string[] args)
         {
             Map map = new Map(150, 70, true);
+            Simulator simulator = new Simulator(map);
 
             try
             {
@@ -17,6 +19,14 @@ namespace AirplaneSimulation
                 }
 
                 map.Display();
+
+                var mainThread = new Thread(() =>
+                {
+                    simulator.BeginSimulation();
+                });
+
+                mainThread.Start();
+                mainThread.Join();
             }
             catch(Exception ex)
             {
