@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AirplaneSimulation.Models
@@ -25,6 +26,7 @@ namespace AirplaneSimulation.Models
         public AirfieldType AirfieldType { get; set; }
         public Tuple<int, int, int, int> Coordinates;
         public bool Track { get; set; }
+        public HashSet<Plane> PlanesInAirspace { get; set; }
 
         public Airfield(Map map, AirfieldType type, int capacity, int X, int Y, int Width, int Height)
         {
@@ -34,10 +36,51 @@ namespace AirplaneSimulation.Models
             Coordinates = new Tuple<int, int, int, int>(X, Y, Width, Height);
             Dispatcher = new Dispatcher(this);
             Planes = new MinHeap<Plane>();
+            PlanesInAirspace = new HashSet<Plane>();
+
+            for (int i = 0; i < Random.Next(5, 20); i++)
+            {
+                switch (AirfieldType)
+                {
+                    case AirfieldType.Cargo:
+                        Planes.Insert(new CargoPlane(this, $"NormalPlane{i + 1}", 5));
+                        break;
+                    case AirfieldType.Public:
+                        Planes.Insert(new PublicPlane(this, $"MilitaryPlane{i + 1}", 5));
+                        break;
+                }
+            }
         }
 
         public Task Landing(Plane plane)
         {
+            lock (_lock)
+            {
+                if (plane is CargoPlane)
+                {
+                    Planes.Insert(new CargoPlane(this, plane.Name, plane.R));
+                }
+                else
+                {
+                    Planes.Insert(new PublicPlane(this, plane.Name, plane.R));
+                }
+
+                Task.Run(async () => {
+
+                    await Planes.Heapify();
+                });
+
+                Task.Run(() => {
+
+                    Thread.Sleep(2000);
+                    Track = false;
+                    lock (Plane._lock)
+                    {
+                        this.Map.PaintAirfield(this.Coordinates, ConsoleColor.Green);
+                    }
+                });
+            }
+
             return Task.CompletedTask;
         }
 

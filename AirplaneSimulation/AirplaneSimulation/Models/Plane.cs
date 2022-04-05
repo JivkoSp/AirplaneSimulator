@@ -7,11 +7,18 @@ using System.Threading.Tasks;
 
 namespace AirplaneSimulation.Models
 {
+    public class LandingEventArgs
+    {
+        public int X;
+        public int Y;
+    }
+
     public abstract class Plane : IPlane
     {
         public static object _lock = new object();
         protected Random Random = new Random();
         public Airfield Airfield { get; set; }
+        public Airfield TargetAirfield { get; set; }
         public double Tank { get; protected set; }
         protected double FuelCost { get; set; }
         protected double FuelCorrection { get; set; }
@@ -28,8 +35,9 @@ namespace AirplaneSimulation.Models
         public double Y { get; set; }
         public int R { get; set; }
         public List<KeyValuePair<int, int>> FlyingCoordinates { get; set; }
-        public Airfield TargetAirfield { get; set; }
-   
+        public delegate Task AsyncEventHandler<LandingEventArgs>(object sender, LandingEventArgs args);
+        public virtual event AsyncEventHandler<LandingEventArgs> OnLanding;
+
         public Plane(Airfield airfield, string name, int r)
         {
             Airfield = airfield;
@@ -44,7 +52,7 @@ namespace AirplaneSimulation.Models
             CurrentFlyingTime = 0;
             FlyingSpeed = 0;
             MaintenanceTime = 0;
-            Airfields = new List<Airfield>();
+            Airfields = Airfield.Map.Airfields;
             FlyingCoordinates = new List<KeyValuePair<int, int>>();
         }
 
@@ -86,9 +94,12 @@ namespace AirplaneSimulation.Models
             return Task.CompletedTask;
         }
 
-        public Task Landing(int targetX, int targetY)
+        public async Task Landing(int targetX, int targetY)
         {
-            return Task.CompletedTask;
+            if (OnLanding != null)
+            {
+                await OnLanding(this, new LandingEventArgs() { X = targetX, Y = targetY });
+            }
         }
     }
 
