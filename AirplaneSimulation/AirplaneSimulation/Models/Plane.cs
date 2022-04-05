@@ -27,13 +27,15 @@ namespace AirplaneSimulation.Models
         public double CurrentFlyingTime { get; protected set; }
         public double MaintenanceTime { get; protected set; }
         protected double FlyingSpeed { get; set; }
-        protected List<Airfield> Airfields { get; set; }
         public double Weight { get; set; }
         public double Speed { get; set; }
         public string Name { get; set; }
         public double X { get; set; }
         public double Y { get; set; }
         public int R { get; set; }
+        public int FlyingPosition { get; set; }
+        public bool MarkedForDeletion { get; set; }
+        protected List<Airfield> Airfields { get; set; }
         public List<KeyValuePair<int, int>> FlyingCoordinates { get; set; }
         public delegate Task AsyncEventHandler<LandingEventArgs>(object sender, LandingEventArgs args);
         public virtual event AsyncEventHandler<LandingEventArgs> OnLanding;
@@ -52,6 +54,8 @@ namespace AirplaneSimulation.Models
             CurrentFlyingTime = 0;
             FlyingSpeed = 0;
             MaintenanceTime = 0;
+            FlyingPosition = 0;
+            MarkedForDeletion = false;
             Airfields = Airfield.Map.Airfields;
             FlyingCoordinates = new List<KeyValuePair<int, int>>();
         }
@@ -81,14 +85,56 @@ namespace AirplaneSimulation.Models
         {
             foreach (var coordinate in FlyingCoordinates)
             {
-                lock (_lock)
+                if (!MarkedForDeletion)
                 {
-                    DrawPlane(coordinate.Key, coordinate.Value);
-                    Tank -= FuelCost * Random.NextDouble();
-                }
+                    if (FlyingPosition == FlyingCoordinates.Count - 4)
+                    {
+                        Task.Run(async () =>
+                        {
+                            lock (_lock)
+                            {
+                                MarkedForDeletion = true;
+                                Console.SetCursorPosition((int)this.X, (int)this.Y);
+                                Console.Write(" ");
+                            }
 
-                CurrentFlyingTime += FlyingSpeed;
-                Thread.Sleep((int)FlyingSpeed);
+                            var coordinates = FlyingCoordinates[FlyingCoordinates.Count - 1];
+                            await Landing(coordinate.Key, coordinate.Value);
+                        });
+
+                        break;
+                    }
+
+                    lock (_lock)
+                    {
+                        DrawPlane(coordinate.Key, coordinate.Value);
+
+                        Tank -= FuelCost * Random.NextDouble();
+                        FlyingPosition++;
+                    }
+
+                    Task.Run(async () => {
+
+                        await CollisionScanner.AirfieldCollisionScan(this, Airfields);
+                    });
+
+
+                    Task.Run(async () => {
+
+                        await CollisionScanner.PlaneCollisionScan(this);
+                    });
+
+                    CurrentFlyingTime += FlyingSpeed;
+                    Thread.Sleep((int)FlyingSpeed);
+                }
+                else
+                {
+                    lock (_lock)
+                    {
+                        Console.SetCursorPosition((int)this.X, (int)this.Y);
+                        Console.Write("X");
+                    }
+                }
             }
 
             return Task.CompletedTask;
