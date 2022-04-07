@@ -1,6 +1,7 @@
 ﻿using AirplaneSimulation.Models.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,6 +45,62 @@ namespace AirplaneSimulation.Models
 
         public Task<bool> FindRoute(Plane plane)
         {
+            foreach (var nei in Airfield.Neigbours)
+            {
+                var targetArf = Airfield.Map.Airfields.FirstOrDefault(arf =>
+                 nei[nei.Count - 1].Key >= arf.Coordinates.Item1 - arf.Coordinates.Item3 / 2 &&
+                 nei[nei.Count - 1].Key <= arf.Coordinates.Item1 + arf.Coordinates.Item3 / 2 &&
+                 nei[nei.Count - 1].Value >= arf.Coordinates.Item2 - arf.Coordinates.Item4 / 2 &&
+                 nei[nei.Count - 1].Value <= arf.Coordinates.Item2 + arf.Coordinates.Item4 / 2);
+
+                double fuelCost = ((double)100 / (double)nei.Count) * Random.NextDouble();
+
+                if (fuelCost * nei.Count <= plane.Tank)
+                {
+                    plane.MarkedForDeletion = false;
+                    plane.FlyingPosition = 0;
+                    plane.TargetAirfield.Dispatcher.UnSignPlane(plane);
+                    plane.TargetAirfield = targetArf;
+                    targetArf.Dispatcher.AssignPlane(plane);
+                    plane.FlyingCoordinates = nei;
+                    plane.SetMaxFlyingTime();
+
+                    lock (Plane._lock)
+                    {
+                        Airfield.Map.PaintAirfield(Airfield.Coordinates, ConsoleColor.Cyan);
+                    }
+
+                    Task.Run(async () => {
+
+                        await plane.Flying();
+                    });
+
+                    Thread.Sleep(3000);
+                    lock (Plane._lock)
+                    {
+                        Airfield.Map.PaintAirfield(Airfield.Coordinates, ConsoleColor.Green);
+                    }
+
+                    break;
+                }
+            }
+
+            //crash if its still marked
+            if (plane.MarkedForDeletion)
+            {
+                lock (Plane._lock)
+                {
+                    Airfield.Map.PaintAirfield(Airfield.Coordinates, ConsoleColor.Yellow);
+                }
+
+                CollisionScanner.FlyingPlanes.Remove(plane);
+                Thread.Sleep(3000);
+                lock (Plane._lock)
+                {
+                    Airfield.Map.PaintAirfield(Airfield.Coordinates, ConsoleColor.Green);
+                }
+            }
+
             return Task.FromResult(false);
         }
 
@@ -65,6 +122,15 @@ namespace AirplaneSimulation.Models
 
                     await Airfield.Landing(plane);
                 });
+
+                CollisionScanner.FlyingPlanes.Remove(plane);
+            }
+            else if (plane.Tank > 0)
+            {
+                Task.Run(async () => {
+
+                    await FindRoute(plane);
+                });
             }
 
             return Task.CompletedTask;
@@ -73,7 +139,8 @@ namespace AirplaneSimulation.Models
         public Task TakeOff(Plane plane, List<KeyValuePair<int, int>> flyingCoordinates)
         {
             if (Airfield.Track == false && Airfield.PlanesInAirspace.Count == 0)
-            {           
+            {
+                CollisionScanner.FlyingPlanes.Add(plane);
                 Airfield.Track = true;
                 plane.TargetAirfield.Dispatcher.AssignPlane(plane);
 

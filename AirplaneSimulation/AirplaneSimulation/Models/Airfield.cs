@@ -27,6 +27,7 @@ namespace AirplaneSimulation.Models
         public Tuple<int, int, int, int> Coordinates;
         public bool Track { get; set; }
         public HashSet<Plane> PlanesInAirspace { get; set; }
+        public List<List<KeyValuePair<int, int>>> Neigbours { get; set; }
 
         public Airfield(Map map, AirfieldType type, int capacity, int X, int Y, int Width, int Height)
         {

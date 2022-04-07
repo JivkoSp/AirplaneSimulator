@@ -35,6 +35,8 @@ namespace AirplaneSimulation.Models
         public int R { get; set; }
         public int FlyingPosition { get; set; }
         public bool MarkedForDeletion { get; set; }
+        public double PreventCollision { get; set; }
+        public bool PreventCollisionSet { get; set; }
         protected List<Airfield> Airfields { get; set; }
         public List<KeyValuePair<int, int>> FlyingCoordinates { get; set; }
         public delegate Task AsyncEventHandler<LandingEventArgs>(object sender, LandingEventArgs args);
@@ -73,6 +75,15 @@ namespace AirplaneSimulation.Models
                 Console.Write("#");
             }
             else { Console.Write(" "); }
+
+            if (this.X != X)
+            {
+                Y += PreventCollision;
+            }
+            else
+            {
+                X += PreventCollision;
+            }
 
             this.X = X;
             this.Y = Y;
@@ -122,6 +133,18 @@ namespace AirplaneSimulation.Models
                     Task.Run(async () => {
 
                         await CollisionScanner.PlaneCollisionScan(this);
+                    });
+
+                    Task.Run(async () => {
+
+                        var collision = await CollisionScanner.PredictPlaneCollisionScan(this);
+
+                        if (!collision)
+                        {
+
+                            PreventCollision = 0;
+                            PreventCollisionSet = false;
+                        }
                     });
 
                     CurrentFlyingTime += FlyingSpeed;

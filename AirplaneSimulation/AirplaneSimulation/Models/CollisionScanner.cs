@@ -84,5 +84,32 @@ namespace AirplaneSimulation.Models
 
             return Task.CompletedTask;
         }
+
+        public static Task<bool> PredictPlaneCollisionScan(Plane plane)
+        {
+            List<KeyValuePair<int, int>> route = new List<KeyValuePair<int, int>>();
+            var otherPlanes = FlyingPlanes.Where(p => p != plane).ToList();
+
+            foreach (var otherPlane in otherPlanes)
+            {
+                double dx = plane.X - otherPlane.X;
+                double dy = plane.Y - otherPlane.Y;
+                double dist = Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2));
+
+                if (dist <= (double)plane.R * 0.4 + (double)otherPlane.R * 0.4)
+                {
+                    if (!plane.PreventCollisionSet && !otherPlane.PreventCollisionSet)
+                    {
+                        plane.PreventCollision = (double)plane.R / 2;
+                        otherPlane.PreventCollision -= (double)otherPlane.R / 2;
+                        plane.PreventCollisionSet = true;
+                    }
+
+                    return Task.FromResult(true);
+                }
+            }
+
+            return Task.FromResult(false);
+        }
     }
 }
