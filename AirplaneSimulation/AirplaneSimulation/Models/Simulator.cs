@@ -14,15 +14,28 @@ namespace AirplaneSimulation.Models
         private Map Map;
         public bool End { get; set; } = false;
 
+        private void UserInformation()
+        {
+            Console.SetCursorPosition(160, 5);
+            Console.WriteLine("Press 'u' to receive real time updates");
+            Console.SetCursorPosition(160, 8);
+            Console.WriteLine("Press 'p' to pause");
+            Console.SetCursorPosition(160, 11);
+            Console.WriteLine("Press 'i' for user input");
+        }
+
         public Simulator(Map map)
         {
             Random = new Random();
             Map = map;
             CollisionScanner.Map = map;
+            SimulationData.Map = map;
         }
 
         public Task BeginSimulation()
         {
+            UserInformation();
+
             foreach (var airfield in Map.Airfields)
             {
                 List<List<KeyValuePair<int, int>>> neigbours = new List<List<KeyValuePair<int, int>>>();
@@ -46,6 +59,11 @@ namespace AirplaneSimulation.Models
                     var airfield = Map.Airfields[Random.Next(0, Map.Airfields.Count)];
 
                     airfield.TakeOff();
+
+                    Task.Run(async () => {
+
+                        await SimulationData.ShowData(End);
+                    });
                 }
                 catch (Exception ex)
                 {

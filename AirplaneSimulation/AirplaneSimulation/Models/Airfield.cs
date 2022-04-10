@@ -26,8 +26,13 @@ namespace AirplaneSimulation.Models
         public AirfieldType AirfieldType { get; set; }
         public Tuple<int, int, int, int> Coordinates;
         public bool Track { get; set; }
+        public bool ChangeSpeed { get; set; }
+        public bool Up { get; set; }
+        public double ChangeSpeedPercent { get; set; }
         public HashSet<Plane> PlanesInAirspace { get; set; }
         public List<List<KeyValuePair<int, int>>> Neigbours { get; set; }
+        public HashSet<Plane> TravelingPlanes { get; set; }
+        public HashSet<Plane> CrashedPlanes { get; set; }
 
         public Airfield(Map map, AirfieldType type, int capacity, int X, int Y, int Width, int Height)
         {
@@ -38,6 +43,8 @@ namespace AirplaneSimulation.Models
             Dispatcher = new Dispatcher(this);
             Planes = new MinHeap<Plane>();
             PlanesInAirspace = new HashSet<Plane>();
+            TravelingPlanes = new HashSet<Plane>();
+            CrashedPlanes = new HashSet<Plane>();
 
             for (int i = 0; i < Random.Next(5, 20); i++)
             {
@@ -55,6 +62,8 @@ namespace AirplaneSimulation.Models
 
         public Task Landing(Plane plane)
         {
+            SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
+
             lock (_lock)
             {
                 if (plane is CargoPlane)
@@ -89,6 +98,8 @@ namespace AirplaneSimulation.Models
         {
             lock (_lock)
             {
+                SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
+
                 if (Planes.Count() > 0)
                 {
                     Plane plane = Planes.GetElement();

@@ -64,6 +64,18 @@ namespace AirplaneSimulation.Models
 
         public abstract void SetMaxFlyingTime();
 
+        public virtual void SpeedUp(double percent)
+        {
+            this.Speed += this.Speed * percent;
+            this.FuelCorrection = percent;
+        }
+
+        public virtual void SpeedDown(double percent)
+        {
+            this.Speed -= this.Speed * percent;
+            this.FuelCorrection = percent;
+        }
+
         public virtual void DrawPlane(double X, double Y)
         {
             Console.CursorVisible = true;
@@ -96,6 +108,8 @@ namespace AirplaneSimulation.Models
         {
             foreach (var coordinate in FlyingCoordinates)
             {
+                SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
+
                 if (!MarkedForDeletion)
                 {
                     if (FlyingPosition == FlyingCoordinates.Count - 4)
@@ -122,6 +136,37 @@ namespace AirplaneSimulation.Models
 
                         Tank -= FuelCost * Random.NextDouble();
                         FlyingPosition++;
+
+                        if (Airfield.ChangeSpeed)
+                        {
+                            if (Airfield.Up)
+                            {
+                                SpeedUp(Airfield.ChangeSpeedPercent);
+                            }
+                            else
+                            {
+                                SpeedDown(Airfield.ChangeSpeedPercent);
+                            }
+
+                            Airfield.ChangeSpeed = false;
+                        }
+
+                        Tank -= Airfield.Up ? (FuelCost * FuelCorrection) * -1 : FuelCorrection * FuelCorrection;
+
+                        if (Tank < 10)
+                        {
+                            Console.SetCursorPosition((int)this.X, (int)this.Y);
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Write("o");
+                        }
+
+                        if (Tank <= 0)
+                        {
+                            MarkedForDeletion = true;
+                            Airfield.TravelingPlanes.Remove(this);
+                            Airfield.CrashedPlanes.Add(this);
+                            continue;
+                        }
                     }
 
                     Task.Run(async () => {
@@ -165,6 +210,8 @@ namespace AirplaneSimulation.Models
 
         public async Task Landing(int targetX, int targetY)
         {
+            SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
+
             if (OnLanding != null)
             {
                 await OnLanding(this, new LandingEventArgs() { X = targetX, Y = targetY });
@@ -209,6 +256,18 @@ namespace AirplaneSimulation.Models
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write("o");
         }
+
+        public override void SpeedUp(double percent)
+        {
+            base.SpeedUp(percent);
+            this.SetFlyingSpeed();
+        }
+
+        public override void SpeedDown(double percent)
+        {
+            base.SpeedDown(percent);
+            this.SetFlyingSpeed();
+        }
     }
 
     public class PublicPlane : Plane, IPlane
@@ -245,6 +304,18 @@ namespace AirplaneSimulation.Models
             base.DrawPlane(X, Y);
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.Write("o");
+        }
+
+        public override void SpeedUp(double percent)
+        {
+            base.SpeedUp(percent);
+            this.SetFlyingSpeed();
+        }
+
+        public override void SpeedDown(double percent)
+        {
+            base.SpeedDown(percent);
+            this.SetFlyingSpeed();
         }
     }
 }

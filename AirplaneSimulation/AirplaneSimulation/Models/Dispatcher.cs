@@ -13,13 +13,15 @@ namespace AirplaneSimulation.Models
         private Random Random = new Random();
         private static object _lock = new object();
         private Airfield Airfield;
+        private bool CanAcceptOtherKind { get; set; }
+        public delegate Task AsyncEventHandler(object sender, EventArgs args);
+        public event AsyncEventHandler OnAirfieldUpdate;
 
         private Task OnLandingRequest(Object sender, LandingEventArgs args)
         {
             Task.Run(async () => {
 
-                if (sender is Plane)
-                {
+                if (sender is Plane) {
 
                     await Landing((Plane)sender);
                 }
@@ -31,6 +33,19 @@ namespace AirplaneSimulation.Models
         public Dispatcher(Airfield airfield)
         {
             Airfield = airfield;
+
+            if (Airfield.AirfieldType == AirfieldType.Public)
+            {
+                switch (Random.Next(0, 1))
+                {
+                    case 0:
+                        CanAcceptOtherKind = false;
+                        break;
+                    case 1:
+                        CanAcceptOtherKind = true;
+                        break;
+                }
+            }
         }
 
         public void AssignPlane(Plane plane)
@@ -62,6 +77,7 @@ namespace AirplaneSimulation.Models
                     plane.TargetAirfield.Dispatcher.UnSignPlane(plane);
                     plane.TargetAirfield = targetArf;
                     targetArf.Dispatcher.AssignPlane(plane);
+                    plane.Airfield.TravelingPlanes.Add(plane);
                     plane.FlyingCoordinates = nei;
                     plane.SetMaxFlyingTime();
 
@@ -93,7 +109,9 @@ namespace AirplaneSimulation.Models
                     Airfield.Map.PaintAirfield(Airfield.Coordinates, ConsoleColor.Yellow);
                 }
 
+                plane.Airfield.CrashedPlanes.Add(plane);
                 CollisionScanner.FlyingPlanes.Remove(plane);
+                OnAirfieldUpdate?.Invoke(this, null);
                 Thread.Sleep(3000);
                 lock (Plane._lock)
                 {
@@ -106,9 +124,12 @@ namespace AirplaneSimulation.Models
 
         public Task Landing(Plane plane)
         {
+            SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
             Airfield.PlanesInAirspace.Remove(plane);
+            plane.Airfield.TravelingPlanes.Remove(plane);
 
-            if (plane.CurrentFlyingTime <= plane.MaxFlyingTime && Airfield.Track == false &&
+            if ((Airfield.AirfieldType == plane.Airfield.AirfieldType || CanAcceptOtherKind == true) && 
+                plane.CurrentFlyingTime <= plane.MaxFlyingTime && Airfield.Track == false &&
                 Airfield.Planes.Count() < Airfield.Capacity && Airfield.PlanesInAirspace.Count == 0)
             {
                 lock (Plane._lock)
@@ -123,6 +144,7 @@ namespace AirplaneSimulation.Models
                     await Airfield.Landing(plane);
                 });
 
+                OnAirfieldUpdate?.Invoke(this, null);
                 CollisionScanner.FlyingPlanes.Remove(plane);
             }
             else if (plane.Tank > 0)
@@ -138,11 +160,15 @@ namespace AirplaneSimulation.Models
 
         public Task TakeOff(Plane plane, List<KeyValuePair<int, int>> flyingCoordinates)
         {
+            SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
             if (Airfield.Track == false && Airfield.PlanesInAirspace.Count == 0)
             {
                 CollisionScanner.FlyingPlanes.Add(plane);
+                Airfield.TravelingPlanes.Add(plane);
                 Airfield.Track = true;
                 plane.TargetAirfield.Dispatcher.AssignPlane(plane);
+
+                OnAirfieldUpdate?.Invoke(this, null);
 
                 lock (Plane._lock)
                 {
