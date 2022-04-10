@@ -15,6 +15,11 @@ namespace AirplaneSimulation.Models
         Cargo = 2
     }
 
+    public class RequestedAirfieldsEventArgs
+    {
+        public List<Airfield> Airfields { get; set; }
+    }
+
     public class Airfield : IAirfield
     {
         private Random Random = new Random();
@@ -33,6 +38,22 @@ namespace AirplaneSimulation.Models
         public List<List<KeyValuePair<int, int>>> Neigbours { get; set; }
         public HashSet<Plane> TravelingPlanes { get; set; }
         public HashSet<Plane> CrashedPlanes { get; set; }
+        public delegate Task AsyncEventHandler<RequestedAirfieldsEventArgs>(object sender, RequestedAirfieldsEventArgs args);
+        public event AsyncEventHandler<RequestedAirfieldsEventArgs> OnRequestedAirfields;
+
+        public async Task RequestedAirfields(Object sender, EventArgs args)
+        {
+            if (sender is Plane)
+            {
+                if (OnRequestedAirfields != null)
+                {
+                    await OnRequestedAirfields(this, new RequestedAirfieldsEventArgs()
+                    {
+                        Airfields = Map.Airfields
+                    });
+                }
+            }
+        }
 
         public Airfield(Map map, AirfieldType type, int capacity, int X, int Y, int Width, int Height)
         {
@@ -51,10 +72,14 @@ namespace AirplaneSimulation.Models
                 switch (AirfieldType)
                 {
                     case AirfieldType.Cargo:
-                        Planes.Insert(new CargoPlane(this, $"NormalPlane{i + 1}", 5));
+                        var plane1 = new CargoPlane(this, $"NormalPlane{i + 1}", 5);
+                        plane1.OnRequestAirfields += RequestedAirfields;
+                        Planes.Insert(plane1);
                         break;
                     case AirfieldType.Public:
-                        Planes.Insert(new PublicPlane(this, $"MilitaryPlane{i + 1}", 5));
+                        var plane2 = new PublicPlane(this, $"MilitaryPlane{i + 1}", 5);
+                        plane2.OnRequestAirfields += RequestedAirfields;
+                        Planes.Insert(plane2);
                         break;
                 }
             }

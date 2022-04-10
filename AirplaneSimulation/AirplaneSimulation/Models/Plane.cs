@@ -40,7 +40,19 @@ namespace AirplaneSimulation.Models
         protected List<Airfield> Airfields { get; set; }
         public List<KeyValuePair<int, int>> FlyingCoordinates { get; set; }
         public delegate Task AsyncEventHandler<LandingEventArgs>(object sender, LandingEventArgs args);
+        public delegate Task AsyncEventHandler(object sender, EventArgs args);
         public virtual event AsyncEventHandler<LandingEventArgs> OnLanding;
+        public virtual event AsyncEventHandler OnRequestAirfields;
+
+        private Task RequestedAirfields(Object sender, RequestedAirfieldsEventArgs args)
+        {
+            if (sender is Airfield)
+            {
+                Airfields = args.Airfields;
+            }
+
+            return Task.CompletedTask;
+        }
 
         public Plane(Airfield airfield, string name, int r)
         {
@@ -58,7 +70,8 @@ namespace AirplaneSimulation.Models
             MaintenanceTime = 0;
             FlyingPosition = 0;
             MarkedForDeletion = false;
-            Airfields = Airfield.Map.Airfields;
+            Airfields = new List<Airfield>();
+            Airfield.OnRequestedAirfields += RequestedAirfields;
             FlyingCoordinates = new List<KeyValuePair<int, int>>();
         }
 
@@ -106,6 +119,14 @@ namespace AirplaneSimulation.Models
 
         public Task Flying()
         {
+            if (OnRequestAirfields != null)
+            {
+                Task.Run(async () => {
+
+                    await OnRequestAirfields(this, null);
+                });
+            }
+
             foreach (var coordinate in FlyingCoordinates)
             {
                 SimulationData.cts.Token.WaitHandle.WaitOne(SimulationData.pauseTime);
