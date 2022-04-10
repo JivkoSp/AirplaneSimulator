@@ -25,10 +25,12 @@ namespace AirplaneSimulation.Models
                 {
                     if (FlyingPlanes.Contains(plane))
                     {
+                        plane.Airfield.TravelingPlanes.Remove(plane);
                         FlyingPlanes.Remove(plane);
                         plane.MarkedForDeletion = true;
                     }
 
+                    otherPlane.Airfield.TravelingPlanes.Remove(otherPlane);
                     FlyingPlanes.Remove(otherPlane);
                     otherPlane.MarkedForDeletion = true;
                 }
