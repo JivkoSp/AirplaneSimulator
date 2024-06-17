@@ -10,27 +10,27 @@
 
 ### Airfield TakeOff color:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185493440-bff55f3f-b76a-4e77-95ac-af7d27512b70.png" alt="TakeOff" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185493440-bff55f3f-b76a-4e77-95ac-af7d27512b70.png" alt="TakeOff" width="100">
 </div>
 
 ### Airfield Landing color:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185493765-ff88be98-5fc4-4c0d-bc82-482d8c6932ce.png" alt="Landing" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185493765-ff88be98-5fc4-4c0d-bc82-482d8c6932ce.png" alt="Landing" width="100">
 </div>
 
 ### Airfield Re-Routing color:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185493646-29ffa751-5e16-45b4-9ba5-e0ef0adfacc7.png" alt="Re-Routing" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185493646-29ffa751-5e16-45b4-9ba5-e0ef0adfacc7.png" alt="Re-Routing" width="100">
 </div>
 
 ### Airfield crash color:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185494159-6af2c49c-2d05-4788-b2a7-191bd90bc0aa.png" alt="Crash" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185494159-6af2c49c-2d05-4788-b2a7-191bd90bc0aa.png" alt="Crash" width="100">
 </div>
 
 ### Pause simulation:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185498047-fc9464c6-2245-4057-813e-9870565f00f5.png" alt="Pause" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185498047-fc9464c6-2245-4057-813e-9870565f00f5.png" alt="Pause" width="100">
 </div>
 
 ### User interface:
