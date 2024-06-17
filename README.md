@@ -85,8 +85,6 @@ Each airfield is color-coded based on dispatcher decisions:
 - Green dot: Cargo planes.
 - Red dot: Plane has less than 10% fuel.
 
-These images are centered and sized to enhance readability and presentation in the markdown file.
-
 
 
 
