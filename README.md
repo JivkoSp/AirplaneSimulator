@@ -35,17 +35,17 @@
 
 ### User interface:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185498261-7582f1af-a301-4b53-a4b6-5a9fb7437fec.png" alt="User Interface" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185498261-7582f1af-a301-4b53-a4b6-5a9fb7437fec.png" alt="User Interface" width="500">
 </div>
 
 ### User interface - change plane speed of certain airfield:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185498355-f6835a0c-c9b0-4baf-8577-aa05e2ccf41c.png" alt="Change Plane Speed" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185498355-f6835a0c-c9b0-4baf-8577-aa05e2ccf41c.png" alt="Change Plane Speed" width="500">
 </div>
 
 ### User interface - change plane speed of certain airfield - select option:
 <div style="text-align: center;">
-  <img src="https://user-images.githubusercontent.com/97282923/185498619-838f55bc-50a1-4ad5-a651-bcdf83be5340.png" alt="Select Option" width="300">
+  <img src="https://user-images.githubusercontent.com/97282923/185498619-838f55bc-50a1-4ad5-a651-bcdf83be5340.png" alt="Select Option" width="500">
 </div>
 
 ## 2. How the app works
